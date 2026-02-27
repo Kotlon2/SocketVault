@@ -39,20 +39,29 @@ def handle_upload(filename):
         print(f"[*] Waiting for file upload on port {UPLOAD_PORT}...")
             
         conn, addr = upload_sock.accept()
-        ssl_upload = context.wrap_socket(conn, server_side=True)
-        print(f"[+] Connection from {addr} for file upload.")
-            
-        with open(os.path.join("server_files", filename), "wb") as f:
-            while True:
-                bytes_read = ssl_upload.recv(BUFFER_SIZE)
+        try:
+            ssl_upload = context.wrap_socket(conn, server_side=True)
+            print(f"[+] Connection from {addr} for file upload.")
+                
+            with open(os.path.join("server_files", filename), "wb") as f:
+                while True:
+                    bytes_read = ssl_upload.recv(BUFFER_SIZE)
+        
+                    if not bytes_read:
+                        break
+                    f.write(bytes_read)
+                
+            print(f"File '{filename}' uploaded successfully.")
+        except Exception as e:
+            print(f"Error during file upload: {e}")
+        finally:
+            try:ssl_upload.close()
+            except: pass
+            try: conn.close()
+            except: pass
+            upload_sock.close()
+                
     
-                if not bytes_read:
-                     break
-                f.write(bytes_read)
-            
-        print(f"File '{filename}' uploaded successfully.")
-        ssl_upload.close()
-        upload_sock.close()
             
 def handle_download(filename):
         download_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -62,18 +71,26 @@ def handle_download(filename):
         print(f"[*] Waiting for file download on port {DOWLOAD_PORT}...")
             
         conn, addr = download_sock.accept()
-        ssl_download = context.wrap_socket(conn, server_side=True)
         
-        print(f"[+] Connection from {addr} for file download.")
+        try:
+            ssl_download = context.wrap_socket(conn, server_side=True)
             
-        with open(os.path.join("server_files", filename), "rb") as f:
-            while chunk := f.read(BUFFER_SIZE):
-                    ssl_download.sendall(chunk)
-            
-        print(f"File '{filename}' downloaded successfully.")
-        ssl_download.close()
-        download_sock.close()
-        
+            print(f"[+] Connection from {addr} for file download.")
+                
+            with open(os.path.join("server_files", filename), "rb") as f:
+                while chunk := f.read(BUFFER_SIZE):
+                        ssl_download.sendall(chunk)
+                
+            print(f"File '{filename}' downloaded successfully.")
+        except Exception as e:
+            print(f"Error during file download: {e}")
+        finally:
+            try: ssl_download.close()
+            except: pass
+            try: conn.close()
+            except: pass
+            download_sock.close()
+
 try:
     while True:
         print(f"[*] Listening as {SERVER_HOST}:{CONTROL_PORT}")
