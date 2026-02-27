@@ -1,10 +1,9 @@
 # SocketVault
-SocketBox is a Python client-server application that allows secure file transfers over SSL/TLS. 
+SocketBox is a Python client-server application that allows file transfers.
 The server can handle multiple clients, supports uploading and downloading files, and includes 
 username/password authentication. Future enhancements may include file tagging and filtering using a database.
 
 # Features
-- Secure file transfer using SSL/TLS
 - Username and password authentication
 - Upload and download files
 - List files on the server
@@ -19,8 +18,7 @@ Run pip install -r requirements.txt
 # Setup
 ### Server
 1. Place `server.py` and the `server_files/` folder on the server machine.
-2. Generate SSL certificates for secure communication (or use the provided self-signed certs).
-3. Run the server:
+2. Run the server:
     python server.py
 
 ### Client
@@ -43,8 +41,7 @@ List of commands will appear.
 
 # Notes/Future Improvements
 - Consider using a database for file tagging and filtering.
-- Improve SSL setup for production (avoid self-signed certificates).
-- Multi-client concurrency support could be added.
+
 
 
 
