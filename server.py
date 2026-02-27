@@ -6,9 +6,8 @@ import ssl
 
 context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
 context.load_cert_chain(certfile="server.crt", keyfile="server.key")
-context.load_verify_locations("client.crt")
-context.check_hostname = False
-context.verify_mode = ssl.CERT_REQUIRED
+#context.load_verify_locations("client.crt")
+context.verify_mode = ssl.CERT_NONE
 
 SERVER_HOST = '0.0.0.0'
 
@@ -18,11 +17,17 @@ UPLOAD_PORT = 5003
 
 BUFFER_SIZE = 4096
 
-
-
 tcp_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 tcp_sock.bind((SERVER_HOST, CONTROL_PORT))
 tcp_sock.listen(5)
+
+upload_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+upload_sock.bind((SERVER_HOST, UPLOAD_PORT))
+upload_sock.listen(5)
+
+download_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+download_sock.bind((SERVER_HOST, DOWLOAD_PORT))
+download_sock.listen(5)
 
 USERS = {
     "User1": "12345",
@@ -32,9 +37,6 @@ USERS = {
 
 
 def handle_upload(filename):
-        upload_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        upload_sock.bind((SERVER_HOST, UPLOAD_PORT))
-        upload_sock.listen(1)
             
         print(f"[*] Waiting for file upload on port {UPLOAD_PORT}...")
             
@@ -43,10 +45,10 @@ def handle_upload(filename):
             ssl_upload = context.wrap_socket(conn, server_side=True)
             print(f"[+] Connection from {addr} for file upload.")
                 
+            os.makedirs("server_files", exist_ok=True)
             with open(os.path.join("server_files", filename), "wb") as f:
                 while True:
                     bytes_read = ssl_upload.recv(BUFFER_SIZE)
-        
                     if not bytes_read:
                         break
                     f.write(bytes_read)
@@ -59,15 +61,10 @@ def handle_upload(filename):
             except: pass
             try: conn.close()
             except: pass
-            upload_sock.close()
                 
     
             
 def handle_download(filename):
-        download_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        download_sock.bind((SERVER_HOST, DOWLOAD_PORT))
-        download_sock.listen(1)
-            
         print(f"[*] Waiting for file download on port {DOWLOAD_PORT}...")
             
         conn, addr = download_sock.accept()
@@ -89,7 +86,6 @@ def handle_download(filename):
             except: pass
             try: conn.close()
             except: pass
-            download_sock.close()
 
 try:
     while True:
